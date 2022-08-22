@@ -15,9 +15,9 @@ This script is for Pokémon Essentials. It prints all item ball events locations
 	003. ID: 017 (014,011) item: RARECANDY  event: HiddenItem
 	004. ID: 018 (025,012) item: POTION  event: HiddenItem
 	005. ID: 027 (029,062) item: RARECANDY, 2  event: HiddenItem
-
+	
 ## Compatibility
-Only works on Essentials version 19 and 19.1.
+Doesn't work on Essentials version 18.1 and older.
 
 ## Installation
 Follow the [Script](/Script.rb) instructions.

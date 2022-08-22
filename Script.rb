@@ -5,21 +5,29 @@
 # This script is for Pokémon Essentials. It prints all item ball events
 # locations on txt/Output Window.
 #
-#===============================================================================
+#== INSTALLATION ===============================================================
 #
 # To this script works, put it above main OR convert into a plugin.
 #
+#== HOW TO USE =================================================================
+#
 # The options will appears at debug on pause menu (on "Item options..." 
-# submenu). This script doesn't check Common Events.
+# submenu). 
+#
+#=== NOTES =====================================================================
+#
+# This script doesn't check Common Events.
 # 
 #===============================================================================
 
-PluginManager.register({                                                 
-  :name    => "Item Ball Printer",                                        
-  :version => "1.1",                                                     
-  :link    => "https://www.pokecommunity.com/showthread.php?p=10382457",             
-  :credits => "FL"
-})
+if !PluginManager.installed?("Item Ball Printer")
+  PluginManager.register({                                                 
+    :name    => "Item Ball Printer",                                        
+    :version => "1.1.1",                                                     
+    :link    => "https://www.pokecommunity.com/showthread.php?p=10382457",             
+    :credits => "FL"
+  })
+end
 
 module ItemBallPrinter
   # Exported txt file name.
@@ -148,50 +156,82 @@ module ItemBallPrinter
   def self.is_hidden_item?(event)
     return event.name[/hiddenitem/i]
   end
-end
 
-DebugMenuCommands.register("item_ball_printer", {
-  "parent"      => "itemsmenu",
-  "name"        => _INTL("Item Ball Printer"),
-  "description" => _INTL("Prints item balls and hidden items on maps."),
-})
-DebugMenuCommands.register("item_ball_print_current_map", {
-  "parent"      => "item_ball_printer",
-  "name"        => _INTL("Print Current Map On Log"),
-  "description" => _INTL("Print current map item balls on Output Window."),
-  "effect"      => proc {
-    ItemBallPrinter.print_current_map
+  def self.on_print_current_map_press
+    print_current_map
     pbMessage(_INTL("Printed!"))
-  }
-})
-DebugMenuCommands.register("item_ball_print_all", {
-  "parent"      => "item_ball_printer",
-  "name"        => _INTL("Print All Maps On txt"),
-  "description" => _INTL("Print all maps on {1}.", ItemBallPrinter.file_full_name),
-  "effect"      => proc {
+  end
+
+  def self.on_print_all_press
     msgwindow = pbCreateMessageWindow
-    if safeExists?(ItemBallPrinter.file_full_name) && !pbConfirmMessageSerious(
-       _INTL("{1} already exists. Overwrite it?",ItemBallPrinter.file_full_name)
+    if safeExists?(file_full_name) && !pbConfirmMessageSerious(
+       _INTL("{1} already exists. Overwrite it?",file_full_name)
     )
       pbDisposeMessageWindow(msgwindow)
-      next
+      return
     end
     pbMessageDisplay(msgwindow,_INTL("Please wait.\\wtnp[0]"))
-    ItemBallPrinter.generate_txt
+    generate_txt
     pbMessageDisplay(msgwindow,_INTL("File generated."))
     pbDisposeMessageWindow(msgwindow)
-  }
-})
-DebugMenuCommands.register("item_ball_print_hidden_mode", {
-  "parent"      => "item_ball_printer",
-  "name"        => _INTL("Change Hidden Items Mode"),
-  "description" => _INTL("Include hidden items on print?"),
-  "effect"      => proc {
-    ItemBallPrinter.include_hidden_items = pbShowCommands(
+  end
+
+  def self.on_change_hidden_items_press
+    self.include_hidden_items = pbShowCommands(
       nil,
       [_INTL("Yes"), _INTL("No"), _INTL("Only include hidden items")],
-      ItemBallPrinter.include_hidden_items,
-      ItemBallPrinter.include_hidden_items
+      include_hidden_items,
+      include_hidden_items
     )
-  }
-})
+  end
+end
+
+if 19 == Essentials::VERSION.split(".")[0].to_i
+  DebugMenuCommands.register("item_ball_printer", {
+    "parent"      => "itemsmenu",
+    "name"        => _INTL("Item Ball Printer"),
+    "description" => _INTL("Prints item balls and hidden items on maps."),
+  })
+  DebugMenuCommands.register("item_ball_print_current_map", {
+    "parent"      => "item_ball_printer",
+    "name"        => _INTL("Print Current Map On Log"),
+    "description" => _INTL("Print current map item balls on Output Window."),
+    "effect"      => proc{ ItemBallPrinter.on_print_current_map_press }
+  })
+  DebugMenuCommands.register("item_ball_print_all", {
+    "parent"      => "item_ball_printer",
+    "name"        => _INTL("Print All Maps On txt"),
+    "description" => _INTL("Print all maps on {1}.", ItemBallPrinter.file_full_name),
+    "effect"      => proc{ ItemBallPrinter.on_print_all_press }
+  })
+  DebugMenuCommands.register("item_ball_print_hidden_mode", {
+    "parent"      => "item_ball_printer",
+    "name"        => _INTL("Change Hidden Items Mode"),
+    "description" => _INTL("Include hidden items on print?"),
+    "effect"      => proc{ ItemBallPrinter.on_change_hidden_items_press }
+  })
+else
+  MenuHandlers.add(:debug_menu, :item_ball_printer, {
+    "parent"      => :items_menu,
+    "name"        => _INTL("Item Ball Printer"),
+    "description" => _INTL("Prints item balls and hidden items on maps."),
+  })
+  MenuHandlers.add(:debug_menu, :item_ball_print_current_map, {
+    "parent"      => :item_ball_printer,
+    "name"        => _INTL("Print Current Map On Log"),
+    "description" => _INTL("Print current map item balls on Output Window."),
+    "effect"      => proc{ ItemBallPrinter.on_print_current_map_press }
+  })
+  MenuHandlers.add(:debug_menu, :item_ball_print_all, {
+    "parent"      => :item_ball_printer,
+    "name"        => _INTL("Print All Maps On txt"),
+    "description" => _INTL("Print all maps on {1}.", ItemBallPrinter.file_full_name),
+    "effect"      => proc{ ItemBallPrinter.on_print_all_press }
+  })
+  MenuHandlers.add(:debug_menu, :item_ball_print_hidden_mode, {
+    "parent"      => :item_ball_printer,
+    "name"        => _INTL("Change Hidden Items Mode"),
+    "description" => _INTL("Include hidden items on print?"),
+    "effect"      => proc{ ItemBallPrinter.on_change_hidden_items_press }
+  })
+end
